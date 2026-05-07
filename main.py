@@ -39,3 +39,11 @@ def delete_item(item_id:int):
         raise HTTPException(status_code=404, detail ="Item not found")
     del items_db[item_id]
     return {"message": "Item deleted"}
+
+
+@app.put("/items/{item_id}")
+def update_item(item_id: int, item: Item):
+    if item_id not in items_db:
+        raise HTTPException(status_code = 404, detail ="Itemm not found")
+    items_db[item_id] = item
+    return {"message": "Item updated", "id": item_id, "item":item}
