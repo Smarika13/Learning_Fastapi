@@ -4,15 +4,15 @@ from sqlalchemy.orm import Session
 import models
 from database import engine, SessionLocal
 
-models.Base.metadata.create_all(bind=engine)
+models.Base.metadata.create_all(bind = engine)
 
-app =FastAPI()
+app = FastAPI()
 
-class BookSchema(BaseModel):
-    title: str
-    author: str
-    price: float
-    available: bool
+class StudentSchema(BaseModel):
+    name:str
+    age: int
+    grade: str
+    passed: bool
 
 def get_db():
     db = SessionLocal()
@@ -21,46 +21,52 @@ def get_db():
     finally:
         db.close()
 
-@app.post("/books")
-def create_book(book: BookSchema, db : Session =Depends(get_db)):
-    db_book = models.Book(title=book.title,author =book.author, price = book.price, available =book.available)
-    db.add(db_book)
+@app.post("/students")
+def create_student(student:StudentSchema, db:Session=Depends(get_db)):
+    db_item = models.Student(name=student.name,age=student.age,grade=student.grade,passed= student.passed)
+    db.add(db_item)
     db.commit()
-    db.refresh(db_book)
-    return db_book
+    db.refresh(db_item)
+    return db_item
 
-@app.get("/books")
-def get_all_books(db: Session = Depends(get_db)):
-    return db.query(models.Book).all()
+@app.get("/students")
+def get_all_students(db:Session=Depends(get_db)):
+    return db.query(models.Student).all()
 
-@app.get("/books/{books_id}")
-def get_books(books_id: int, db: Session = Depends(get_db)):
+@app.get("/students/{student_id}")
+def get_student(student_id:int, db:Session=Depends(get_db)):
+    item = db.query(models.Student).filter(models.Student.id ==student_id).first()
+    if not item:
+        raise HTTPException(status_code = 404, detail="Not found")
+    return item
     
-    books = db.query(models.Book).filter(models.Book.id == books_id).first()
-    if not books:
-        raise HTTPException(status_code = 404,detail ="Item not found")
-    return books
-
-@app.delete("/books/{books_id}")
-def delete_book(books_id: int, db: Session =Depends(get_db)):
-    books = db.query(models.Book).filter(models.Book.id ==books_id).first()
-    if not books:
-        raise HTTPException(status_code = 404, detail = "Item not found")
-    db.delete(books)
+@app.put("/students/{student_id}")
+def update_student(student_id:int,student:StudentSchema ,db:Session=Depends(get_db)):
+    item = db.query(models.Student).filter(models.Student.id == student_id).first()
+    if not item:
+        raise HTTPException(status_code = 404,detail = "Item not found")
+    item.name =student.name
+    item.age = student.age
+    item.grade =student.grade
+    item.passed=student.passed
     db.commit()
-    return {"message": "Item deleted"}
+    db.refresh(item)
+    return item
 
-@app.put("/books/{books_id}")
-def update_book(books_id:int, book: BookSchema,db:Session = Depends(get_db)):
-    books = db.query(models.Book).filter(models.Book.id ==books_id).first()
-    if not books:
-        raise HTTPException(status_code = 404, detail = "Item not found")
-    books.title = book.title
-    books.author = book.author
-    books.price = book.price
-    books.available = book.available
+@app.delete("/students/{student_id}")
+def delete_student(student_id:int, db:Session=Depends(get_db)):
+    item = db.query(models.Student).filter(models.Student.id==student_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail ="Item not found")
+    db.delete(item)
     db.commit()
-    db.refresh(books)
-    return books
+    return {"message":"Student deleted"}
 
     
+
+
+
+
+
+
+
