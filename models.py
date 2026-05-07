@@ -1,11 +1,10 @@
-from sqlalchemy import Column, Integer, String, Float, Boolean
+from sqlalchemy import Column, Integer, String, Boolean
 from database import Base
 
-
-class Book(Base):
-    __tablename__ = "books"
-    id = Column(Integer, primary_key=True)
-    title = Column(String)
-    author = Column(String)
-    price = Column(Float)
-    available = Column(Boolean)
+class Student(Base):
+    __tablename__="student"
+    id = Column(Integer, primary_key = True)
+    name = Column(String)
+    age = Column(Integer)
+    grade = Column(String)
+    passed = Column(Boolean)
