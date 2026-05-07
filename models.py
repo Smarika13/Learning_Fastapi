@@ -2,9 +2,10 @@ from sqlalchemy import Column, Integer, String, Float, Boolean
 from database import Base
 
 
-class Item(Base):
-    __tablename__ = "items"
+class Book(Base):
+    __tablename__ = "books"
     id = Column(Integer, primary_key=True)
-    name = Column(String)
+    title = Column(String)
+    author = Column(String)
     price = Column(Float)
-    in_stock = Column(Boolean)
+    available = Column(Boolean)
