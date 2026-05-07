@@ -1,49 +1,51 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 from pydantic import BaseModel
+from sqlalchemy.orm import Session
+import models
+from database import engine, SessionLocal
 
-app = FastAPI()
+models.Base.metadata.create_all(bind=engine)
 
-#In memory database
-items_db = {}
-counter = 1
+app =FastAPI()
 
-class Item(BaseModel):
+class ItemSchema(BaseModel):
     name: str
     price: float
     in_stock: bool
 
-@app.get("/")
-def home():
-    return {"message": "Hello,World"}
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 @app.post("/items")
-def create_item(item: Item):
-    global counter
-    items_db[counter] = item
-    counter += 1
-    return {"message": "Item created", "id": counter -1, "item":item}
+def create_item(item: ItemSchema, db : Session =Depends(get_db)):
+    db_item = models.Item(name=item.name, price = item.price, in_stock =item.in_stock)
+    db.add(db_item)
+    db.commit()
+    db.refresh(db_item)
+    return db_item
 
 @app.get("/items")
-def get_all_items():
-    return items_db
+def get_all_items(db: Session = Depends(get_db)):
+    return db.query(models.Item).all()
 
 @app.get("/items/{item_id}")
-def get_item(item_id:int):
-    if item_id not in items_db:
-        raise HTTPException(status_code=404,detail="Item not found")
-    return items_db[item_id]
+def get_items(item_id: int, db: Session = Depends(get_db)):
+    
+    item = db.query(models.Item).filter(models.Item.id == item_id).first()
+    if not item:
+        raise HTTPException(status_code = 404,detail ="Item not found")
+    return item
 
 @app.delete("/items/{item_id}")
-def delete_item(item_id:int):
-    if item_id not in items_db:
-        raise HTTPException(status_code=404, detail ="Item not found")
-    del items_db[item_id]
+def delete_item(item_id: int, db: Session =Depends(get_db)):
+    item = db.query(models.Item).filter(models.Item.id ==item_id).first()
+    if not item:
+        raise HTTPException(status_code = 404, detail = "Item not found")
+    db.delete(item)
+    db.commit()
     return {"message": "Item deleted"}
-
-
-@app.put("/items/{item_id}")
-def update_item(item_id: int, item: Item):
-    if item_id not in items_db:
-        raise HTTPException(status_code = 404, detail ="Itemm not found")
-    items_db[item_id] = item
-    return {"message": "Item updated", "id": item_id, "item":item}
+    
