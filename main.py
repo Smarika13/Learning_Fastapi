@@ -80,8 +80,8 @@ def create_student(student:StudentSchema, db:Session=Depends(get_db),current_use
     return db_item
 
 @app.get("/students")
-def get_all_students(db:Session=Depends(get_db),current_user: str = Depends(get_current_user)):
-    return db.query(models.Student).all()
+def get_all_students(skip:int=0,limit: int =10,db:Session=Depends(get_db),current_user: str = Depends(get_current_user)):
+    return db.query(models.Student).offset(skip).limit(limit).all()
 
 @app.get("/students/{student_id}")
 def get_student(student_id:int, db:Session=Depends(get_db),current_user: str = Depends(get_current_user)):
