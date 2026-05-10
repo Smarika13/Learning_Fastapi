@@ -24,6 +24,14 @@ class UserLoginSchema(BaseModel):
     email: str
     password: str
 
+class UserResponse(BaseModel):
+    id:int
+    name:str
+    email:str
+
+    class Config:
+        from_attributes = True
+
 def get_db():
     db = SessionLocal()
     try:
@@ -31,7 +39,7 @@ def get_db():
     finally:
         db.close()
 
-@app.post("/register")
+@app.post("/register",response_model = UserResponse)
 def register(user: UserRegisterSchema, db: Session = Depends(get_db)):
     existing_user = db.query(models.User).filter(models.User.email == user.email).first()
     if existing_user:
@@ -41,7 +49,7 @@ def register(user: UserRegisterSchema, db: Session = Depends(get_db)):
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
-    return {"message": "User registered successfully"}
+    return db_user
 
 @app.post("/login")
 def login(user: UserLoginSchema, db: Session = Depends(get_db)):
