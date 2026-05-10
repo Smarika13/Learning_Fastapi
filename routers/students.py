@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 import models
 from auth import get_current_user
 from dependencies import get_db
+from typing import Optional
 
 router = APIRouter()
 
@@ -29,8 +30,25 @@ def create_student(student: StudentSchema, db: Session = Depends(get_db), curren
     return db_item
 
 @router.get("/students")
-def get_all_students(skip: int = 0, limit: int = 10, db: Session = Depends(get_db), current_user: str = Depends(get_current_user)):
-    return db.query(models.Student).offset(skip).limit(limit).all()
+def get_all_students(
+    skip: int = 0,
+    limit: int = 10,
+    grade: Optional[str] = None,
+    sort_by: Optional[str] = None,
+    db: Session = Depends(get_db),
+    current_user: str = Depends(get_current_user)
+):
+    query = db.query(models.Student)
+    
+    if grade:
+        query = query.filter(models.Student.grade == grade)
+    
+    if sort_by == "name":
+        query = query.order_by(models.Student.name)
+    elif sort_by == "age":
+        query = query.order_by(models.Student.age)
+    
+    return query.offset(skip).limit(limit).all()
 
 @router.get("/students/{student_id}")
 def get_student(student_id: int, db: Session = Depends(get_db), current_user: str = Depends(get_current_user)):
