@@ -66,7 +66,14 @@ def login(user: UserLoginSchema, db: Session = Depends(get_db)):
 
 @app.post("/students")
 def create_student(student:StudentSchema, db:Session=Depends(get_db),current_user: str = Depends(get_current_user)):
-    db_item = models.Student(name=student.name,age=student.age,grade=student.grade,passed= student.passed)
+    user = db.query(models.User).filter(models.User.email == current_user).first()
+    db_item = models.Student(
+        name=student.name,
+        age=student.age,
+        grade=student.grade,
+        passed= student.passed,
+        user_id = user.id
+        )
     db.add(db_item)
     db.commit()
     db.refresh(db_item)
