@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, File, UploadFile
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from sqlalchemy import func
@@ -6,6 +6,9 @@ import models
 from auth import get_current_user
 from dependencies import get_db
 from typing import Optional
+import os
+import uuid
+
 
 router = APIRouter()
 
@@ -79,3 +82,21 @@ def delete_student(student_id: int, db: Session = Depends(get_db), current_user:
     db.delete(item)
     db.commit()
     return {"message": "Student deleted"}
+
+@router.post("/students/{student_id}/upload-picture")
+async def upload_picture(student_id:int, file:UploadFile = File(...),db:Session=Depends(get_db),current_user:str=Depends(get_current_user)):
+    item = db.query(models.Student).filter(models.Student.id == student_id).first()
+    if not item:
+        raise HTTPException(status_code = 404, detail = "Student not found")
+    
+    extension = os.path.splitext(file.filename)[1]
+    unique_filename = f"{uuid.uuid4()}{extension}"
+    file_path = f"uploads/{unique_filename}"
+
+    with open(file_path,"wb") as buffer:
+        buffer.write(await file.read())
+
+    item.profile_picture = file_path
+    db.commit()
+    db.refresh(item)
+    return {"filename": unique_filename,"path": file_path}

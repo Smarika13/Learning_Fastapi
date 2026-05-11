@@ -17,6 +17,7 @@ class Student(Base):
     age = Column(Integer)
     grade = Column(String)
     passed = Column(Boolean)
+    profile_picture = Column(String)
     user_id = Column(Integer,ForeignKey("users.id"))
     owner = relationship("User",back_populates="students")
 
