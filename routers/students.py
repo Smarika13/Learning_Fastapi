@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 import models
 from auth import get_current_user
 from dependencies import get_db
@@ -41,7 +42,7 @@ def get_all_students(
     query = db.query(models.Student)
     
     if grade:
-        query = query.filter(models.Student.grade == grade)
+        query = query.filter(func.upper(models.Student.grade)==func.upper(grade))
     
     if sort_by == "name":
         query = query.order_by(models.Student.name)
