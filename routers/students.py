@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 import models
-from auth import get_current_user
+from auth import get_current_user,get_admin_user
 from dependencies import get_db
 from typing import Optional
 import os
@@ -62,7 +62,7 @@ def get_student(student_id: int, db: Session = Depends(get_db), current_user: st
     return item
 
 @router.put("/students/{student_id}")
-def update_student(student_id: int, student: StudentSchema, db: Session = Depends(get_db), current_user: str = Depends(get_current_user)):
+def update_student(student_id: int, student: StudentSchema, db: Session = Depends(get_db), admin_user: str = Depends(get_admin_user)):
     item = db.query(models.Student).filter(models.Student.id == student_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Item not found")
@@ -75,7 +75,7 @@ def update_student(student_id: int, student: StudentSchema, db: Session = Depend
     return item
 
 @router.delete("/students/{student_id}")
-def delete_student(student_id: int, db: Session = Depends(get_db), current_user: str = Depends(get_current_user)):
+def delete_student(student_id: int, db: Session = Depends(get_db), admin_user: str = Depends(get_admin_user)):
     item = db.query(models.Student).filter(models.Student.id == student_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Item not found")

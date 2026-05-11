@@ -8,6 +8,7 @@ class User(Base):
     name = Column(String)
     email = Column(String, unique = True)
     hashed_password = Column(String)
+    role = Column(String,default ="user")
     students=relationship("Student",back_populates="owner")
 
 class Student(Base):
