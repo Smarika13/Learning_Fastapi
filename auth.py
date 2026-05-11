@@ -5,6 +5,9 @@ from fastapi import Depends, HTTPException
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import os
 from dotenv import load_dotenv
+from dependencies import get_db
+from sqlalchemy.orm import Session
+import models
 
 load_dotenv()
 
@@ -52,12 +55,20 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(oauth2_
         raise HTTPException(status_code=401, detail="Invalid token")
     
 def create_refresh_token(data: dict):
-    
-    # copy to avoid modifying the original dictionary
+
     to_encode = data.copy()
 
-    # token expires 30 minutes from now
+
     expire = datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
     to_encode.update({"exp": expire})
 
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+def get_admin_user(db: Session = Depends(get_db), current_user: str = Depends(get_current_user)):
+    user = db.query(models.User).filter(models.User.email==current_user).first()
+    if  not user.role == "admin":
+        raise HTTPException(status_code=403, detail="Forbidden")
+    return user
+        
+        
+    
